@@ -38,7 +38,10 @@ class Retriever:
         chunk_metadata = chunk.get('metadata', {})
         
         if 'category' in metadata_filter:
-            if chunk_metadata.get('category') != metadata_filter['category']:
+            # Relaxed category filtering: allow case-insensitive partial match
+            filter_category = metadata_filter['category'].lower()
+            chunk_category = chunk_metadata.get('category', '').lower()
+            if filter_category not in chunk_category:
                 return False
         
         if 'article_number' in metadata_filter:
@@ -59,7 +62,7 @@ class Retriever:
         return True
 
     def search_semantic(self, query, top_k=3, metadata_filter: Optional[Dict] = None):
-        search_k = top_k * 5 if metadata_filter else top_k
+        search_k = top_k * 50 if metadata_filter else top_k
         
         query_vector = self.encoder.encode([query])
         distances, indices = self.index.search(query_vector, search_k)

@@ -84,6 +84,7 @@ Available metadata fields:
 
 Instructions:
 - If the query mentions specific topics or categories, include them in the filter
+- Only include "category" if the query explicitly mentions it or is strongly tied to that specific domain.
 - If the query mentions article numbers, include them
 - If no specific metadata is mentioned, return an empty filter {{}}
 - Return ONLY a valid JSON object, nothing else
