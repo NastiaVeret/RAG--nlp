@@ -189,30 +189,29 @@ def process_query(prompt, retriever, reranker, llm_service, filter_generator):
         message_placeholder = st.empty()
         
         with st.status("Processing request...", expanded=True) as status:
-            # 0. Generate metadata filter
-            st.write("Analyzing query for metadata filters...")
-            metadata_filter = filter_generator.generate_filter(prompt)
-            
-            if metadata_filter:
-                filter_explanation = filter_generator.explain_filter(metadata_filter)
-                st.write(f"Filter applied: {filter_explanation}")
-            else:
-                st.write("No metadata filters applied")
-            
-            st.write("Dense Retrieval (Semantic Search with Metadata Filtering)...")
+            st.write("Standard Dense Retrieval...")
+            metadata_filter = None
             initial_results = retriever.search_semantic(
-                prompt, 
+                prompt,
                 top_k=10,
-                metadata_filter=metadata_filter
+                metadata_filter=None
             )
-            
-            if not initial_results and metadata_filter:
-                st.write("No results found with filter. Falling back to standard search...")
-                initial_results = retriever.search_semantic(
-                    prompt, 
-                    top_k=10,
-                    metadata_filter=None
-                )
+            if not initial_results:
+                st.write("No results found. analyzing query for metadata filters...")
+                metadata_filter = filter_generator.generate_filter(prompt)
+                
+                if metadata_filter:
+                    filter_explanation = filter_generator.explain_filter(metadata_filter)
+                    st.write(f"Filter applied: {filter_explanation}")
+                    
+                    st.write("Retrying with Metadata Filtering...")
+                    initial_results = retriever.search_semantic(
+                        prompt, 
+                        top_k=10,
+                        metadata_filter=metadata_filter
+                    )
+                else:
+                    st.write("No applicable metadata filters found.")
                 
             st.write(f"Retrieved {len(initial_results)} candidates")
             
